@@ -1,12 +1,12 @@
 ----------------------------------------------------------------------------------------------
 -- ItemFinder
---- © 2015 Vim
+--- © 2015 Vim Exe @ Jabbit <narthorn@gmail.com>
 --
 --- ItemFinder is free software, all files licensed under the GPLv3. See LICENSE for details.
 
 ---- TODO
 --
---- Reset filters on search button rightclick 
+--- Reset filters on search button rightclick
 --- Progress bar colors are ugly
 --- tune search speed
 --
@@ -94,12 +94,12 @@ ItemFinder = {
 	version = {0,10,0},
 
 	nMaxItems = 90000,         -- FIXME: tune these
-	nMaxDisplayedItems = 1000, -- 
+	nMaxDisplayedItems = 1000, --
 	nScanPerTick = 300,       --- make sure we have :
 	nShowPerTick = 2000,      --- nShowPerTick/fShowInterval > nScanPerTick/fScanInterval
 	fScanInterval = 1/20,     --- to ensure we display items faster than we scan them
 	fShowInterval = 1/4,      --- so we don't hit 100% with more than nMaxDisplayedItems waiting to be drawn
- 	
+
 	tCategoryFilters = {},
 	tSlotFilters = {},
 	tStatFilters = {},
@@ -107,12 +107,12 @@ ItemFinder = {
 	tPriceFilters = {},
 	nILvlMin = nil,
 	nILvlMax = nil,
-	
+
 	tItems = {},
 	nScanIndex = 1,
 	nShowIndex = 1,
 	nLastValidId = 1,
-} 
+}
 
 function ItemFinder:OnLoad()
 	self.xmlDoc = XmlDoc.CreateFromFile("ItemFinder.xml")
@@ -120,19 +120,19 @@ function ItemFinder:OnLoad()
 	self.wndMain:FindChild("Title"):SetText(self.name .. " v" .. table.concat(self.version,"."))
 	self.wndProgress = self.wndMain:FindChild("ProgressBar")
 	self.wndItemList = self.wndMain:FindChild("ItemList")
-	
+
 	self:DropDownList("Category", tCategories, self.tCategoryFilters)
 	self:DropDownList("Slot", tSlots, self.tSlotFilters)
-	self:ButtonFilters(self.wndMain:FindChild("StatFilters"), tStats, self.tStatFilters, true) 
+	self:ButtonFilters(self.wndMain:FindChild("StatFilters"), tStats, self.tStatFilters, true)
 	self:ButtonFilters(self.wndMain:FindChild("QualityFilters"), tItemQualities, self.tQualityFilters)
 	self:ButtonFilters(self.wndMain:FindChild("PriceFilters"), tCurrencies, self.tPriceFilters)
 
 	self.tmrItemScanner = ApolloTimer.Create(self.fScanInterval, true, "ItemScanner", self)
 	self.tmrItemScanner:Stop()
-	
+
 	self.tmrUpdateDisplay = ApolloTimer.Create(self.fShowInterval, true, "UpdateDisplay", self)
 	self.tmrUpdateDisplay:Stop()
-		
+
 	Apollo.RegisterSlashCommand("itemfinder", "OnSlashCommand", self)
 	Apollo.RegisterSlashCommand("if", "OnSlashCommand", self)
 
@@ -152,9 +152,9 @@ end
 
 function ItemFinder:MatchFilters(item)
 	for stat,included in pairs(self.tStatFilters) do
-		if included == (item.tStats[stat] == nil) then return false end 
+		if included == (item.tStats[stat] == nil) then return false end
 	end
-	
+
 	return (self.strItemName            == nil or item.strName:lower():find(self.strItemName:lower()) ~= nil)
 	   and (next(self.tCategoryFilters) == nil or self.tCategoryFilters[item.eCategory])
 	   and (next(self.tSlotFilters)     == nil or self.tSlotFilters[item.eSlot])
@@ -168,7 +168,7 @@ function ItemFinder:GetItemData(id)
 	local item = Item.GetDataFromId(id)
 	if item then
 		local tItemInfo = item:GetDetailedInfo().tPrimary
-		
+
 		tItemInfo.item = item
 		tItemInfo.eSlot = item:GetSlot()
 		tItemInfo.tStats = {}
@@ -180,8 +180,8 @@ function ItemFinder:GetItemData(id)
 			local stat = tItemInfo.arBudgetBasedProperties[i]
 			tItemInfo.tStats[stat.eProperty] = stat.nValue
 		end
-		
-		return tItemInfo 
+
+		return tItemInfo
 	end
 end
 
@@ -190,7 +190,7 @@ function ItemFinder:ItemScanner()
 		local nNextIndex = math.min(self.nScanIndex+self.nScanPerTick, self.nMaxItems)
 		for i=self.nScanIndex,nNextIndex do
 			local item = self:GetItemData(self.nMaxItems - i)
-			if item then 
+			if item then
 				self.nLastValidId = i
 				if self:MatchFilters(item) then
 					self.tItems[#self.tItems+1] = item
@@ -224,7 +224,7 @@ function ItemFinder:UpdateDisplay(bEverything)
 			local wndItemText = wndItem:FindChild("ItemText")
 			wndItemText:SetText(item.strName .. "\n" .. item.item:GetItemTypeName()
 	    		                .. " - iLvl : " .. (item.nEffectiveLevel or "")
-	        		            .. "\n" .. self.StatsString(item)) 
+	        		            .. "\n" .. self.StatsString(item))
 			wndItemText:SetTextColor(tItemQualities[item.eQuality].color)
 		end
 		self.nShowIndex = nNextIndex + 1
@@ -248,7 +248,7 @@ end
 function ItemFinder:Reset()
 	self:Stop()
 	self.tItems = {}
-	self.nScanIndex = 1 
+	self.nScanIndex = 1
 	self.nShowIndex = 1
 	self.wndProgress:SetProgress(0)
 	self.wndProgress:SetBarColor("green")
@@ -263,20 +263,20 @@ function ItemFinder:TiledButtons(strButtonName, wndFilters, tFilterData, tFilter
 	for id, button in pairs(tFilterData) do
 		local wndItem = Apollo.LoadForm(self.xmlDoc, strButtonName, wndFilters, self)
 		local wndLabel = wndItem:FindChild("Label")
-		wndItem:SetData(id)		
+		wndItem:SetData(id)
 		wndLabel:SetText(button.label)
 		if button.color then wndLabel:SetTextColor(button.color) end
-		if button.icon  then 
-			wndItem:FindChild("Icon"):SetSprite(button.icon) 
+		if button.icon  then
+			wndItem:FindChild("Icon"):SetSprite(button.icon)
 			wndLabel:SetAnchorOffsets(22,0,0,0)	        -- meh
 			wndLabel:SetTextFlags("DT_CENTER", false)   -- kinda ugly
 		end
 		local strCallback = bExclude and "OnIncludeExcludeButton" or "OnIncludeButton"
 		wndItem:AddEventHandler("ButtonCheck", strCallback)
-		wndItem:AddEventHandler("ButtonUncheck", strCallback) 
+		wndItem:AddEventHandler("ButtonUncheck", strCallback)
 	end
 	wndFilters:SetData(tFilters)
-	wndFilters:ArrangeChildrenTiles(0, function(a,b) 
+	wndFilters:ArrangeChildrenTiles(0, function(a,b)
 		return a:GetData() < b:GetData()
 	end)
 end
